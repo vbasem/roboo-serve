@@ -24,7 +24,7 @@ In this gravity-defying installation, a breakfast table is bolted to the ceiling
 """
 )
 
-//genai.configure(api_key='')
+genai.configure(api_key='')
 model = genai.GenerativeModel(
     model_name='gemini-3-flash-preview',
     system_instruction=system_message # This sets the persona!
@@ -64,6 +64,18 @@ def on_received_data(line):
 
 
 print("Searching for micro:bit via Bluetooth...")
+tts_engine = pyttsx3.init()
+tts_engine.setProperty('rate', 170)  # Speed of speech (words per minute)
+tts_engine.setProperty('volume', 1.0) # Volume level 0.0 to 1.0
+
+voices = tts_engine.getProperty('voices')
+
+# Print available voices
+for index, voice in enumerate(voices):
+    print(f"Voice {index}: {voice.name}")
+    print(f"  - ID: {voice.id}")
+    print(f"  - Languages: {voice.languages}")
+    print()
 
                             # find_one_microbit() automatically looks for a nearby paired/advertised device
 with KaspersMicrobit.find_one_microbit() as microbit:
@@ -75,21 +87,22 @@ with KaspersMicrobit.find_one_microbit() as microbit:
     
 
     while not finished:
+        tts_engine = pyttsx3.init()
+        tts_engine.setProperty('rate', 170)  # Speed of speech (words per minute)
+        tts_engine.setProperty('volume', 1.0) # Volume level 0.0 to 1.0
+        tts_engine.setProperty('voice', "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_DE-DE_HEDDA_11.0")
         if question:
                 # Send the question to the AI
                 #response = model.generate_content(question)
                #print(f"AI says: {response.text}")
         #response = "Dummy answer"
         #print(f'{response}')
-            response = 'dummy answer'
+            response = 'Du bist dumm'
         # FIX: Directly get the text from the response object
             answer = response
             print(f'{answer}') 
             print("-" * 30)
                  # Speak the response out loud
-            tts_engine = pyttsx3.init()
-            tts_engine.setProperty('rate', 170)  # Speed of speech (words per minute)
-            tts_engine.setProperty('volume', 1.0) # Volume level 0.0 to 1.0
 
             if tts_engine._inLoop:
                 tts_engine.endLoop()
@@ -100,11 +113,14 @@ with KaspersMicrobit.find_one_microbit() as microbit:
             tts_engine.stop()
             del tts_engine
             
+             # 3. Send "done" signal back to micro:bit via Bluetooth
+            print("Sending 'done' signal to micro:bit...")
+            microbit.uart.send_string("done$")
             
             question = None # Clear the prompt
 # Keep the script alive until a button is pressed
     
-        #time.sleep(0.1)
+        time.sleep(0.1)
 
 
 #except KeyboardInterrupt:
